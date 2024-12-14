@@ -1,0 +1,10 @@
+.modal-body {
+  overflow: visible !important;
+}
+
+.dragging {
+  background: rgba(0, 123, 255, 0.3);
+  transform: rotate(3deg) scale(1.05);
+  z-index: 1050; /* 드래그 중 요소가 위로 오도록 설정 */
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+}
