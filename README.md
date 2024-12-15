@@ -14,7 +14,6 @@
 - **React.js:** 사용자 인터페이스 개발
 - **React Bootstrap:** 스타일링 및 UI 구성 요소
 - **Axios:** API 통신
-- **Firebase Firestore:** 데이터베이스 관리
 
 ### 백엔드 및 데이터 관리
 - **Firebase Firestore:** 성가 데이터 저장 및 관리
@@ -39,7 +38,6 @@
 - 주차별 성가 목록 관리
 - 선택된 성가 YouTube 동영상 재생 지원
 - 주차별, 월별, 연도별 필터링
-- 성가 목록이 없을 경우 'No songs available' 메시지 표시
 
 ### 2. **성가 관리 서비스**
 - 성가 추가, 수정, 삭제
