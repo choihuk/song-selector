@@ -8,25 +8,30 @@ function WeeklyPlaylist() {
   const [year, setYear] = useState(new Date().getFullYear());
   const [month, setMonth] = useState(new Date().getMonth() + 1);
   const [week, setWeek] = useState(getWeekNumber(new Date()));
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const fetchSongs = async () => {
+      setIsLoading(true);
       try {
         const docRef = doc(db, 'songs', `${year}-${month}-${week}`);
         const docSnap = await getDoc(docRef);
         if (docSnap.exists()) {
-          if (docSnap.exists()) {
-            const allSongs = docSnap.data().songs || [];
-            const filteredSongs = allSongs.filter(song => song.selected === true);
-            setSongs(filteredSongs);
-          }
+          const allSongs = docSnap.data().songs || [];
+          const filteredSongs = allSongs.filter(song => song.selected === true);
+          setSongs(filteredSongs);
+        } else {
+          setSongs([]);
         }
       } catch (err) {
         console.error('Error fetching songs:', err);
+        setSongs([]);
+      } finally {
+        setIsLoading(false);
       }
     };
     fetchSongs();
-  }, [year, week]);
+  }, [year, month, week]);
 
   return (
     <div className="container mt-5">
@@ -78,7 +83,9 @@ function WeeklyPlaylist() {
         </div>
       </div>
       <div className="list-group">
-        {songs.length > 0 ? (
+        {isLoading ? (
+          <p className="text-center">Loading...</p>
+        ) : songs.length > 0 ? (
           songs.map((song, index) => (
             <div
               key={index}
@@ -114,7 +121,7 @@ function WeeklyPlaylist() {
             </div>
           ))
         ) : (
-          <p className="text-center">No songs available for this week.</p>
+          <p className="text-center">저장된 성가가 없습니다.</p>
         )}
       </div>
     </div>

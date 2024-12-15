@@ -3,6 +3,7 @@ import axios from 'axios';
 import { getWeekNumber } from '../utils';
 import { doc, setDoc, getDoc } from 'firebase/firestore';
 import SongManagementModal from './SongManagementModal';
+import HymnLookupModal from './HymnLookupModal';
 import { db } from '../firebaseConfig';
 import Button from 'react-bootstrap/Button';
 
@@ -16,7 +17,9 @@ function SongSelection() {
   const [searchResults, setSearchResults] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [nextPageToken, setNextPageToken] = useState('');
+  const [previousPageTokens, setPreviousPageTokens] = useState([]);
   const [showManagementModal, setShowManagementModal] = useState(false);
+  const [showHymnModal, setShowHymnModal] = useState(false);
 
   useEffect(() => {
     async function fetchSongs() {
@@ -27,12 +30,42 @@ function SongSelection() {
           setSongs(docSnap.data().songs || []);
         } else {
           setSongs([
-            { id: 'song-1', name: '입당', videoId: '', link: '', selected: false },
-            { id: 'song-2', name: '예물 준비', videoId: '', link: '', selected: false },
-            { id: 'song-3', name: '영성체', videoId: '', link: '', selected: false },
-            { id: 'song-4', name: '영성체 후 묵상곡', videoId: '', link: '', selected: false },
-            { id: 'song-5', name: '파견', videoId: '', link: '', selected: false },
-          ])
+            {
+              id: 'song-1',
+              name: '입당',
+              videoId: '',
+              link: '',
+              selected: false,
+            },
+            {
+              id: 'song-2',
+              name: '예물 준비',
+              videoId: '',
+              link: '',
+              selected: false,
+            },
+            {
+              id: 'song-3',
+              name: '영성체',
+              videoId: '',
+              link: '',
+              selected: false,
+            },
+            {
+              id: 'song-4',
+              name: '영성체 후 묵상곡',
+              videoId: '',
+              link: '',
+              selected: false,
+            },
+            {
+              id: 'song-5',
+              name: '파견',
+              videoId: '',
+              link: '',
+              selected: false,
+            },
+          ]);
         }
       } catch (err) {
         console.error('Error fetching songs from database:', err);
@@ -44,6 +77,9 @@ function SongSelection() {
   const handleOpenModal = () => setShowManagementModal(true);
   const handleCloseModal = () => setShowManagementModal(false);
 
+  const handleOpenHymnModal = () => setShowHymnModal(true);
+  const handleCloseHymnModal = () => setShowHymnModal(false);
+
   const searchYouTube = async (query, pageToken = '') => {
     try {
       const response = await axios.get(
@@ -53,7 +89,7 @@ function SongSelection() {
             part: 'snippet',
             q: query,
             key: process.env.REACT_APP_YOUTUBE_API_KEY,
-            maxResults: 10,
+            maxResults: 9,
             type: 'video',
             pageToken,
           },
@@ -61,6 +97,11 @@ function SongSelection() {
       );
       setSearchResults(response.data.items);
       setNextPageToken(response.data.nextPageToken || '');
+      if (!pageToken) {
+        setPreviousPageTokens([]);
+      } else {
+        setPreviousPageTokens((prev) => [...prev, pageToken]);
+      }
     } catch (err) {
       console.error('Error searching YouTube:', err);
     }
@@ -100,6 +141,15 @@ function SongSelection() {
     if (nextPageToken) {
       searchYouTube(searchQuery, nextPageToken);
       setCurrentPage(currentPage + 1);
+    }
+  };
+
+  const handlePreviousPage = () => {
+    if (currentPage > 1 && previousPageTokens.length > 0) {
+      const prevToken = previousPageTokens[previousPageTokens.length - 2];
+      setPreviousPageTokens((prev) => prev.slice(0, -1));
+      setCurrentPage((prev) => prev - 1);
+      searchYouTube(searchQuery, prevToken || '');
     }
   };
 
@@ -163,11 +213,16 @@ function SongSelection() {
         </div>
       </div>
       <div className="mb-4">
-      <div className="d-flex justify-content-end mb-3">
-        <Button variant="primary" onClick={handleOpenModal}>
-          성가 관리
-        </Button>
-      </div>
+        <div className="d-flex justify-content-end mb-3">
+          <Button variant="primary" onClick={handleOpenModal}>
+            성가 관리
+          </Button>
+        </div>
+        <div className="d-flex justify-content-end mb-3">
+          <Button variant="primary" onClick={handleOpenHymnModal}>
+            청소년 청년 성가집 찾기
+          </Button>
+        </div>
         <select
           className="form-select"
           onChange={(e) => handleSongSelect(e.target.value)}
@@ -191,6 +246,10 @@ function SongSelection() {
         setSongs={setSongs}
         show={showManagementModal}
         handleClose={handleCloseModal}
+      />
+      <HymnLookupModal
+        show={showHymnModal}
+        handleClose={handleCloseHymnModal}
       />
       {selectedSong && (
         <div className="mb-4">
@@ -236,15 +295,20 @@ function SongSelection() {
               </div>
             ))}
           </div>
-          {nextPageToken && (
-            <button className="btn btn-secondary mt-3" onClick={handleNextPage}>
-              다음 페이지
-            </button>
-          )}
+          {searchResults.length > 0 && (
+        <div className="pagination-controls">
+          <Button variant="secondary" onClick={handlePreviousPage} disabled={currentPage === 1}>
+            이전 페이지
+          </Button>
+          <Button variant="secondary" onClick={handleNextPage}>
+            다음 페이지
+          </Button>
+        </div>
+      )}
         </div>
       )}
       <button className="btn btn-success" onClick={handleSave}>
-        Save Songs
+        저장
       </button>
     </div>
   );
