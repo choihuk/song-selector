@@ -199,16 +199,31 @@ function SongSelection() {
             value={week}
             onChange={(e) => setWeek(Number(e.target.value))}
           >
-            {[...Array(5)].map((_, idx) => (
-              <option key={idx} value={idx + 1}>
-                {idx + 1}주차 (
-                {new Date(year, month - 1, 1 + idx * 7).toLocaleDateString(
-                  'ko-KR',
-                  { month: 'long', day: 'numeric' }
-                )}
-                )
-              </option>
-            ))}
+            {(() => {
+              const daysInMonth = new Date(year, month, 0).getDate();
+              const maxWeeks = Math.ceil(daysInMonth / 7);
+
+              return [...Array(maxWeeks)].map((_, idx) => {
+                const startDate = new Date(year, month - 1, 1 + idx * 7);
+                const sundayDate = new Date(startDate);
+                sundayDate.setDate(
+                  startDate.getDate() + (7 - startDate.getDay())
+                );
+
+                if (sundayDate.getMonth() + 1 !== month) return null;
+
+                return (
+                  <option key={idx} value={idx + 1}>
+                    {idx + 1}주차 (
+                    {sundayDate.toLocaleDateString('ko-KR', {
+                      month: 'long',
+                      day: 'numeric',
+                    })}
+                    )
+                  </option>
+                );
+              });
+            })()}
           </select>
         </div>
       </div>
